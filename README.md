@@ -38,4 +38,4 @@ For MacOS running the code might cause below exception at time of uploading docu
    ```
    ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1000)
    ```
-To resolve consider go through the steps provided on [Stackoverflow] (https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)  
+To resolve consider go through the steps provided on this [Stackoverflow](https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error) question
