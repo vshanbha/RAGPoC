@@ -30,3 +30,12 @@ Python version 3.12
    ```
    $ streamlit run streamlit_app.py
    ```
+
+## Troubleshooting ##
+The application uses Apache Tika port of Python for extracting text from Documents. 
+To run this, system requires Java 7+ installed on the machine.
+For MacOS running the code might cause below exception at time of uploading document(s)
+   ```
+   ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1000)
+   ```
+To resolve consider go through the steps provided on [Stackoverflow] (https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error)  

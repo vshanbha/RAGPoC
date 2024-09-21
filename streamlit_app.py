@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
-
+from tika import parser
 
 def start_chat(document, ct):
     ct.subheader("Now ask a question about the document!")
@@ -14,17 +14,13 @@ def start_chat(document, ct):
         history.chat_message(msg["role"]).write(msg["content"])
 
     if prompt := ct.chat_input(placeholder="Can you give me a short summary?"):
-        print('1')
         next_msg = 'Here is a document: {document} \n\n---\n\n {prompt}'
         st.session_state.messages.append({"role": "user", "content": prompt})
-        print('2')
         human_prompt = HumanMessagePromptTemplate.from_template(next_msg)
         chat_prompt = ChatPromptTemplate.from_messages([human_prompt])
         request = chat_prompt.format_prompt(document = document, prompt = prompt).to_messages()
-        print('3')
         history.chat_message("user").write(prompt)
         response = llm.invoke(request)
-        print(response)
 
         with history.chat_message("assistant"):
             st.session_state.messages.append({"role": "assistant", "content": response.content})
@@ -57,11 +53,14 @@ else:
 
     # Let the user upload a file via `st.file_uploader`.
     uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)", type=("txt", "md")
+        "Upload a document (.txt or .md)",
+        type=("txt", "md","xls","csv","doc","ppt","xlsx","docx","pptx","pdf"),
     )
 
     if uploaded_file:
         # Process the uploaded file and question.
-        document = uploaded_file.read().decode()
+        # document = uploaded_file.read().decode()
+        parsed_document = parser.from_file(uploaded_file)
+        document = parsed_document['content']
         start_chat(document,st)
 
