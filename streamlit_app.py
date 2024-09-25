@@ -14,10 +14,20 @@ def start_chat(document, ct):
         history.chat_message(msg["role"]).write(msg["content"])
 
     if prompt := ct.chat_input(placeholder="Can you give me a short summary?"):
-        next_msg = 'Here is a document: {document} \n\n---\n\n {prompt}'
+        next_msg = '{prompt}'
         st.session_state.messages.append({"role": "user", "content": prompt})
+        sys_prompt = """
+            You are a Technical Troubleshooting Assistant. 
+            When a user starts chatting with you, treat each chat thread as an attempt to troubleshoot a technical issue.
+            Ask questions if necessary to get more information about the problem at hand.
+            Provide useful suggestions to help with troubleshooting the problem.
+            User any document provided as relevant to the troubleshooting question asked. 
+            Include relevant infromation or excerpt from the document to aid the troubleshooting effort.
+            Here is the document: {document}
+        """
+        system_prompt = SystemMessagePromptTemplate.from_template(sys_prompt)
         human_prompt = HumanMessagePromptTemplate.from_template(next_msg)
-        chat_prompt = ChatPromptTemplate.from_messages([human_prompt])
+        chat_prompt = ChatPromptTemplate.from_messages([system_prompt, human_prompt])
         request = chat_prompt.format_prompt(document = document, prompt = prompt).to_messages()
         history.chat_message("user").write(prompt)
         response = llm.invoke(request)
