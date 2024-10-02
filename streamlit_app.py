@@ -1,41 +1,6 @@
+import hmac
 import streamlit as st
-from langchain_openai import ChatOpenAI
-from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
-from tika import parser
-
-def start_chat(document, ct):
-    ct.subheader("Now ask a question about the document!")
-    ct.markdown("A few sample questions")
-    history = ct.container(height=400)
-    if "messages" not in st.session_state or ct.button("Clear conversation history"):
-        st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
-
-    for msg in st.session_state.messages:
-        history.chat_message(msg["role"]).write(msg["content"])
-
-    if prompt := ct.chat_input(placeholder="Can you give me a short summary?"):
-        next_msg = '{prompt}'
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        sys_prompt = """
-            You are a Technical Troubleshooting Assistant. 
-            When a user starts chatting with you, treat each chat thread as an attempt to troubleshoot a technical issue.
-            Ask questions if necessary to get more information about the problem at hand.
-            Provide useful suggestions to help with troubleshooting the problem.
-            User any document provided as relevant to the troubleshooting question asked. 
-            Include relevant infromation or excerpt from the document to aid the troubleshooting effort.
-            Here is the document: {document}
-        """
-        system_prompt = SystemMessagePromptTemplate.from_template(sys_prompt)
-        human_prompt = HumanMessagePromptTemplate.from_template(next_msg)
-        chat_prompt = ChatPromptTemplate.from_messages([system_prompt, human_prompt])
-        request = chat_prompt.format_prompt(document = document, prompt = prompt).to_messages()
-        history.chat_message("user").write(prompt)
-        response = llm.invoke(request)
-
-        with history.chat_message("assistant"):
-            st.session_state.messages.append({"role": "assistant", "content": response.content})
-            history.write(response.content)
-
+from menu import menu
 
 # Show title and description.
 st.set_page_config(
@@ -43,34 +8,65 @@ st.set_page_config(
     page_icon=':wrench:',
     layout="wide"
 )
-st.title(":wrench: Doocument QnA")
-st.write(
-    "Upload a document below and ask a question about it. AI will answer! "
+
+# Initialize st.session_state.role to None
+if "role" not in st.session_state:
+    st.session_state.role = None
+
+# Retrieve the role from Session State to initialize the widget
+st.session_state._role = st.session_state.role
+
+def set_role():
+    # Callback function to save the role selection to Session State
+    st.session_state.role = st.session_state._role
+
+
+# Selectbox to choose role
+st.selectbox(
+    "Select your role:",
+    [None, "user", "admin", "super-admin"],
+    key="_role",
+    on_change=set_role,
 )
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-if "API_KEY" in st.secrets:
-    openai_api_key = st.secrets["API_KEY"]
-else:
-    openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+def check_password():
+    """Returns `True` if the user had a correct password."""
 
-if not openai_api_key:
-    st.sidebar.info("Please add your OpenAI API key to continue.")
-else:
-    llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.2, max_tokens=300)
+    def login_form():
+        """Form with widgets to collect user information"""
+        with st.form("Credentials"):
+            st.text_input("Username", key="username")
+            st.text_input("Password", type="password", key="password")
+            st.form_submit_button("Log in", on_click=password_entered)
 
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)",
-        type=("txt", "md","xls","csv","doc","ppt","xlsx","docx","pptx","pdf"),
-    )
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["username"] in st.secrets[
+            "passwords"
+        ] and hmac.compare_digest(
+            st.session_state["password"],
+            st.secrets.passwords[st.session_state["username"]],
+        ):
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store the username or password.
+            del st.session_state["username"]
+        else:
+            st.session_state["password_correct"] = False
 
-    if uploaded_file:
-        # Process the uploaded file and question.
-        # document = uploaded_file.read().decode()
-        parsed_document = parser.from_file(uploaded_file)
-        document = parsed_document['content']
-        start_chat(document,st)
+    # Return True if the username + password is validated.
+    if st.session_state.get("password_correct", False):
+        return True
 
+    # Show inputs for username + password.
+    login_form()
+    if "password_correct" in st.session_state:
+        st.error("😕 User not known or password incorrect")
+    return False
+
+
+if not check_password():
+    st.stop()
+
+menu() # Render the dynamic menu!
+
+# Main Streamlit app starts here
