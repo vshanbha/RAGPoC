@@ -16,18 +16,9 @@ if "role" not in st.session_state:
 # Retrieve the role from Session State to initialize the widget
 st.session_state._role = st.session_state.role
 
-def set_role():
+def set_role(user):
     # Callback function to save the role selection to Session State
-    st.session_state.role = st.session_state._role
-
-
-# Selectbox to choose role
-st.selectbox(
-    "Select your role:",
-    [None, "user", "admin", "super-admin"],
-    key="_role",
-    on_change=set_role,
-)
+    st.session_state.role = st.secrets["roles"][user] if st.secrets["roles"][user] else None
 
 def check_password():
     """Returns `True` if the user had a correct password."""
@@ -48,6 +39,7 @@ def check_password():
             st.secrets.passwords[st.session_state["username"]],
         ):
             st.session_state["password_correct"] = True
+            set_role(st.session_state["username"])
             del st.session_state["password"]  # Don't store the username or password.
             del st.session_state["username"]
         else:

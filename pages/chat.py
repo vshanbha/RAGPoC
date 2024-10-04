@@ -2,7 +2,6 @@ import streamlit as st
 from menu import menu_with_redirect
 from langchain_openai import ChatOpenAI
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
-from tika import parser
 
 def start_chat(document, ct):
     ct.subheader("Now ask a question about the document!")
@@ -41,10 +40,7 @@ def start_chat(document, ct):
 # Redirect to app.py if not logged in, otherwise show the navigation menu
 menu_with_redirect()
 
-st.title(":wrench: Doocument QnA")
-st.write(
-    "Upload a document below and ask a question about it. AI will answer! "
-)
+st.title(":wrench: Troubleshooter")
 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
@@ -58,16 +54,4 @@ if not openai_api_key:
     st.sidebar.info("Please add your OpenAI API key to continue.")
 else:
     llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.2, max_tokens=300)
-
-    # Let the user upload a file via `st.file_uploader`.
-    uploaded_file = st.file_uploader(
-        "Upload a document (.txt or .md)",
-        type=("txt", "md","xls","csv","doc","ppt","xlsx","docx","pptx","pdf"),
-    )
-
-    if uploaded_file:
-        # Process the uploaded file and question.
-        # document = uploaded_file.read().decode()
-        parsed_document = parser.from_file(uploaded_file)
-        document = parsed_document['content']
-        start_chat(document,st)
+    start_chat(st.session_state.get("Document",""),st)
