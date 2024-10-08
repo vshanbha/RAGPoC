@@ -3,14 +3,13 @@ import streamlit as st
 
 def authenticated_menu():
     # Show a navigation menu for authenticated users
-    st.sidebar.page_link("streamlit_app.py", label="Switch accounts")
-    st.sidebar.page_link("pages/chat.py", label="Troubleshooter")
+    st.sidebar.page_link("pages/chat.py", label="Document Chat")
     if st.session_state.role in ["admin", "super-admin"]:
         st.sidebar.page_link("pages/admin.py", label="Document Upload")
         st.sidebar.page_link(
             "pages/super-admin.py",
-            label="Manage admin access",
-            disabled=st.session_state.role != "super-admin",
+            label="Manage System Prompt",
+            disabled=st.session_state.role not in ["admin","super-admin"],
         )
 
 
@@ -34,3 +33,7 @@ def menu_with_redirect():
     if "role" not in st.session_state or st.session_state.role is None:
         st.switch_page("streamlit_app.py")
     menu()
+
+def route_chat():
+    # Redirect to the Chat page
+    st.switch_page("pages/chat.py")

@@ -1,10 +1,11 @@
 import streamlit as st
+import json
 from menu import menu_with_redirect
 from langchain_openai import ChatOpenAI
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
 
 def start_chat(document, ct):
-    ct.subheader("Now ask a question about the document!")
+    ct.subheader("Ask a question about the document!")
     ct.markdown("A few sample questions")
     history = ct.container(height=400)
     if "messages" not in st.session_state or ct.button("Clear conversation history"):
@@ -16,13 +17,10 @@ def start_chat(document, ct):
     if prompt := ct.chat_input(placeholder="Can you give me a short summary?"):
         next_msg = '{prompt}'
         st.session_state.messages.append({"role": "user", "content": prompt})
-        sys_prompt = """
-            You are a Technical Troubleshooting Assistant. 
-            When a user starts chatting with you, treat each chat thread as an attempt to troubleshoot a technical issue.
-            Ask questions if necessary to get more information about the problem at hand.
-            Provide useful suggestions to help with troubleshooting the problem.
-            User any document provided as relevant to the troubleshooting question asked. 
-            Include relevant infromation or excerpt from the document to aid the troubleshooting effort.
+        with open("prompts/prompt.json", "r") as infile:
+            data = json.load(infile)
+            system_prompt = data["system_prompt"]
+        sys_prompt = system_prompt + """
             Here is the document: {document}
         """
         system_prompt = SystemMessagePromptTemplate.from_template(sys_prompt)
@@ -40,7 +38,7 @@ def start_chat(document, ct):
 # Redirect to app.py if not logged in, otherwise show the navigation menu
 menu_with_redirect()
 
-st.title(":wrench: Troubleshooter")
+st.title(":wrench: Document Assistant")
 
 # Ask user for their OpenAI API key via `st.text_input`.
 # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it

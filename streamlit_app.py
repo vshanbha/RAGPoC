@@ -1,6 +1,7 @@
 import hmac
 import streamlit as st
 from menu import menu
+from menu import route_chat
 
 # Show title and description.
 st.set_page_config(
@@ -60,5 +61,5 @@ if not check_password():
     st.stop()
 
 menu() # Render the dynamic menu!
+route_chat() # Show the chat page
 
-# Main Streamlit app starts here

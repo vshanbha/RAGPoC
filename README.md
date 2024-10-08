@@ -31,6 +31,22 @@ Python version 3.12
    $ streamlit run streamlit_app.py
    ```
 
+## Users and Roles ##
+Create a file called `secrets.toml` insite the `.streamlit` director and add the following information.
+   ```
+   API_KEY="<your-OpenAI-api-key>"
+
+   [passwords]
+   # Follow the rule: username = "password"
+   <user> = "<password>"
+
+   [roles]
+   # Follow the rule: username = "role"
+   <user> = "<role>"
+   ```
+Replace `<user>` with actual user names for login to the application. 
+Replace `<role>` with one of `user`, `admin` or `super-admin`
+
 ## Troubleshooting ##
 The application uses Apache Tika port of Python for extracting text from Documents. 
 To run this, system requires Java 7+ installed on the machine.
