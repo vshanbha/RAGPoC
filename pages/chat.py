@@ -1,8 +1,16 @@
 import streamlit as st
 import json
 from menu import menu_with_redirect
+from persistence import vector_db
+
 from langchain_openai import ChatOpenAI
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.runnables import RunnablePassthrough
+
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 def start_chat(document, ct):
     ct.subheader("Ask a question about the document!")
@@ -21,18 +29,32 @@ def start_chat(document, ct):
             data = json.load(infile)
             system_prompt = data["system_prompt"]
         sys_prompt = system_prompt + """
-            Here is the document: {document}
+            here are is the context: {context}
         """
+
         system_prompt = SystemMessagePromptTemplate.from_template(sys_prompt)
         human_prompt = HumanMessagePromptTemplate.from_template(next_msg)
         chat_prompt = ChatPromptTemplate.from_messages([system_prompt, human_prompt])
-        request = chat_prompt.format_prompt(document = document, prompt = prompt).to_messages()
         history.chat_message("user").write(prompt)
-        response = llm.invoke(request)
+
+        # https://python.langchain.com/docs/tutorials/rag/#retrieval-and-generation-retrieve
+        vector_store = vector_db.init(openai_api_key)
+        retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+
+        rag_chain = (
+            {"context": retriever | format_docs, "prompt": RunnablePassthrough()}
+            | chat_prompt
+            | llm
+            | StrOutputParser()
+        )
+
+        response = ""
+        for chunk in rag_chain.stream(prompt):
+            response = response + chunk
 
         with history.chat_message("assistant"):
-            st.session_state.messages.append({"role": "assistant", "content": response.content})
-            history.write(response.content)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+            history.write(response)
 
 
 # Redirect to app.py if not logged in, otherwise show the navigation menu
