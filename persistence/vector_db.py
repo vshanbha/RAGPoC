@@ -7,6 +7,7 @@ from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 
+database_dir = "database"
 index_path = "database/faiss_db"
 namespace = f"FAISS/faiss_db"
 record_manager = SQLRecordManager(
@@ -16,6 +17,10 @@ record_manager = SQLRecordManager(
 # TODO Refactor so this should likely be a class
 def init(openai_api_key):
     embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+
+    if not os.path.isdir(database_dir):
+        os.mkdir(database_dir)
+
     try:
         vector_store = FAISS.load_local(
             index_path, embeddings, allow_dangerous_deserialization=True
