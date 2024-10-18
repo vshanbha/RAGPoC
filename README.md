@@ -8,6 +8,7 @@ A simple Streamlit app that answers questions about an uploaded document via Ope
 
 ## Prerequisites ##
 Python version 3.12
+
 Java 7 or higher version installed
 
 ## Dev Setup ##
