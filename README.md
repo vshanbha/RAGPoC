@@ -7,9 +7,9 @@ A simple Streamlit app that answers questions about an uploaded document via Ope
 ### How to run it on your own machine
 
 ## Prerequisites ##
-Python version 3.12
+- Python version 3.12
 
-Java 7 or higher version installed
+- Java 7 or higher version installed
 
 ## Dev Setup ##
 
@@ -34,7 +34,7 @@ Java 7 or higher version installed
    ```
 
 ## Users and Roles ##
-Create a file called `secrets.toml` insite the `.streamlit` directory and add the following information.
+Create a file called `secrets.toml` insitde the `.streamlit` director and add the following information.
    ```
    API_KEY="<your-OpenAI-api-key>"
 
@@ -66,9 +66,14 @@ At the moment the application tries to embedd the whole document text into one s
 2. Chat Errors due to Token Limit
 At the moment no attempt has been made to strip down the quantum of content sent to the AI for RAG. The code does limit number of documents sent for RAG, but if the sum total of tokens for all the documents is more than the limit of the model, we get an error.
 
+3. Delete buttons do not work yet. Need to figure out how to delete individual documents from FAISS when the indexing was done using the Langchain Indexing APIs
+
 ## References ##
 [Streamlit Docs](https://docs.streamlit.io/)
+
 [Langchain How To Guides](https://python.langchain.com/docs/how_to/)
+
 [Langchain Docs on RAG](https://python.langchain.com/docs/how_to/indexing/)
+
 [Medium Blog Links](https://medium.com/gopenai/how-to-perform-crud-operations-with-vector-database-using-langchain-2df3f7fb48aa)
 
