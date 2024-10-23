@@ -1,8 +1,17 @@
 import streamlit as st
 
 from menu import menu_with_redirect
+from menu import route_upload
 from tika import parser
 from persistence.vector_db import FAISSManager
+
+def upload_file(file):
+    parsed_document = parser.from_file(file)
+    doc = parsed_document["content"]
+    # TODO Consider splitting document into multiple files before sending to vector store
+    vector_db.insert_document(file.name, doc, parsed_document['metadata'])
+    st.session_state["uploaded_file"] = file.file_id
+
 
 # Redirect to app.py if not logged in, otherwise show the navigation menu
 menu_with_redirect()
@@ -30,12 +39,13 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
     # Process the uploaded file and question.
     # document = uploaded_file.read().decode()
-    parsed_document = parser.from_file(uploaded_file)
-    doc = parsed_document['content']
-    st.session_state["Document"] = doc
+    if not "uploaded_file" in st.session_state:
+        upload_file(uploaded_file)
+    elif uploaded_file.file_id != st.session_state["uploaded_file"]:
+        upload_file(uploaded_file)
 
-    # TODO Consider splitting document into multiple files before sending to vector store
-    vector_db.insert_document(uploaded_file.name, doc, parsed_document['metadata'])
+
+
 
 st.subheader("Previously Uploaded Documents")
 # TODO how to list documents uploaded to Vector store with option to delete
@@ -46,5 +56,6 @@ for d in docs:
     left.write(fname)
     middle.write(d.metadata["Content-Length"])
     if right.button(":wastebasket:", key=fname):
-        right.markdown("You deleted the emoji button {}".format(fname))
-#        vector_db.delete_document(fname)
+        right.markdown("You deleted the emoji button {} {}".format(fname, d.id))
+        vector_db.delete_document(fname)
+        route_upload()

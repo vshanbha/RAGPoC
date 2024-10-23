@@ -72,14 +72,20 @@ class FAISSManager:
         return results
 
     def delete_document(self, source_name):
-        """Delete a document from the FAISS vector store by its source name."""
-        doc_ids = self.record_manager.get_ids_by_source(source_name)
-    
-        # Delete document using vector store's delete method
-        if doc_ids:
-            self.vector_store.delete(ids=doc_ids)
-            print(f"Deleted document(s) with source ID: {source_name}")
-        else:
-            print(f"No document found with source ID: {source_name}")
+        docs = self.list_documents()
 
+        new_docs = []
+        for d in docs:
+            metadata = d.metadata
+            if metadata["source"] == source_name:
+                print(self.record_manager.list_keys(group_ids=[source_name]))
+                continue
+            document = Document(page_content=d.page_content, metadata=d.metadata)
+            print(document.metadata["source"])
+            new_docs.append(document)
+        
+        # TODO how to clean up unwanted documents
+        print(index(new_docs, self.record_manager, self.vector_store, cleanup="full", source_id_key="source"))
+        self.vector_store.save_local(self.index_path)
+        
         print(f"Document with source '{source_name}' deleted successfully.")
