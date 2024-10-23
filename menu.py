@@ -38,3 +38,7 @@ def menu_with_redirect():
 def route_chat():
     # Redirect to the Chat page
     st.switch_page("pages/chat.py")
+
+def route_upload():
+    # Redirect to the Chat page
+    st.switch_page("pages/upload.py")
