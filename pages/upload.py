@@ -2,7 +2,7 @@ import streamlit as st
 
 from menu import menu_with_redirect
 from tika import parser
-from persistence import vector_db
+from persistence.vector_db import FAISSManager
 
 # Redirect to app.py if not logged in, otherwise show the navigation menu
 menu_with_redirect()
@@ -10,6 +10,7 @@ menu_with_redirect()
 # Initialize Database
 if "API_KEY" in st.secrets:
     openai_api_key = st.secrets["API_KEY"]
+    vector_db = FAISSManager(openai_api_key=openai_api_key)
 else:
     openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
 
@@ -34,10 +35,16 @@ if uploaded_file:
     st.session_state["Document"] = doc
 
     # TODO Consider splitting document into multiple files before sending to vector store
-    vector_db.insert_document(openai_api_key, uploaded_file.name, doc, parsed_document['metadata'])
+    vector_db.insert_document(uploaded_file.name, doc, parsed_document['metadata'])
 
 st.subheader("Previously Uploaded Documents")
 # TODO how to list documents uploaded to Vector store with option to delete
-docs = vector_db.list(openai_api_key)
+docs = vector_db.list_documents()
 for d in docs:
-    d.metadata["source"]
+    fname = d.metadata["source"]
+    left, middle, right = st.columns(3)
+    left.write(fname)
+    middle.write(d.metadata["Content-Length"])
+    if right.button(":wastebasket:", key=fname):
+        right.markdown("You deleted the emoji button {}".format(fname))
+#        vector_db.delete_document(fname)

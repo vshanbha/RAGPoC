@@ -48,6 +48,7 @@ Replace `<user>` with actual user names for login to the application.
 Replace `<role>` with one of `user`, `admin` or `super-admin`
 
 ## Troubleshooting ##
+1. Certificate issues preventing text extraction
 The application uses Apache Tika port of Python for extracting text from Documents. 
 To run this, system requires Java 7+ installed on the machine.
 For MacOS running the code might cause below exception at time of uploading document(s)
@@ -55,3 +56,17 @@ For MacOS running the code might cause below exception at time of uploading docu
    ssl.SSLCertVerificationError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1000)
    ```
 To resolve consider go through the steps provided on this [Stackoverflow](https://stackoverflow.com/questions/27835619/urllib-and-ssl-certificate-verify-failed-error) question
+
+## Known Issues ##
+1. Token Limit
+At the moment the application tries to embedd the whole document text into one single document in the Vector DB. If the document size hits token limit for the embedding model then document upload does not work. 
+
+2. Chat Errors due to Token Limit
+At the moment no attempt has been made to strip down the quantum of content sent to the AI for RAG. The code does limit number of documents sent for RAG, but if the sum total of tokens for all the documents is more than the limit of the model, we get an error.
+
+## References ##
+[Streamlit Docs](https://docs.streamlit.io/)
+[Langchain How To Guides](https://python.langchain.com/docs/how_to/)
+[Langchain Docs on RAG](https://python.langchain.com/docs/how_to/indexing/)
+[Medium Blog Links](https://medium.com/gopenai/how-to-perform-crud-operations-with-vector-database-using-langchain-2df3f7fb48aa)
+
