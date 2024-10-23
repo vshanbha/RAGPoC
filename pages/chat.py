@@ -1,7 +1,7 @@
 import streamlit as st
 import json
 from menu import menu_with_redirect
-from persistence import vector_db
+from persistence.vector_db import FAISSManager
 
 from langchain_openai import ChatOpenAI
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
@@ -12,7 +12,7 @@ from langchain_core.runnables import RunnablePassthrough
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-def start_chat(document, ct):
+def start_chat(ct):
     ct.subheader("Ask a question about the document!")
     ct.markdown("A few sample questions")
     history = ct.container(height=400)
@@ -38,8 +38,8 @@ def start_chat(document, ct):
         history.chat_message("user").write(prompt)
 
         # https://python.langchain.com/docs/tutorials/rag/#retrieval-and-generation-retrieve
-        vector_store = vector_db.init(openai_api_key)
-        retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+        vector_db = FAISSManager(openai_api_key=openai_api_key)
+        retriever = vector_db.get_retriever()
 
         rag_chain = (
             {"context": retriever | format_docs, "prompt": RunnablePassthrough()}
@@ -74,4 +74,4 @@ if not openai_api_key:
     st.sidebar.info("Please add your OpenAI API key to continue.")
 else:
     llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.2, max_tokens=300)
-    start_chat(st.session_state.get("Document",""),st)
+    start_chat(st)

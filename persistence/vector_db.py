@@ -72,6 +72,7 @@ class FAISSManager:
         return results
 
     def delete_document(self, source_name):
+        """ Delete a document from the FAISS vector store."""
         docs = self.list_documents()
 
         new_docs = []
@@ -89,3 +90,6 @@ class FAISSManager:
         self.vector_store.save_local(self.index_path)
         
         print(f"Document with source '{source_name}' deleted successfully.")
+    
+    def get_retriever(self):
+        return self.vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 3})
