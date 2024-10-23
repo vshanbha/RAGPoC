@@ -9,6 +9,8 @@ A simple Streamlit app that answers questions about an uploaded document via Ope
 ## Prerequisites ##
 Python version 3.12
 
+Java 7 or higher version installed
+
 ## Dev Setup ##
 
 1. Create Python venv Open a terminal and run:
@@ -32,7 +34,7 @@ Python version 3.12
    ```
 
 ## Users and Roles ##
-Create a file called `secrets.toml` insite the `.streamlit` director and add the following information.
+Create a file called `secrets.toml` insite the `.streamlit` directory and add the following information.
    ```
    API_KEY="<your-OpenAI-api-key>"
 
