@@ -22,13 +22,20 @@ def start_chat(ct):
     for msg in st.session_state.messages:
         history.chat_message(msg["role"]).write(msg["content"])
 
+
+    level = st.select_slider(
+        "Response Level",
+        options=["Basic", "Advanced", "Expert"],
+        value="Advanced"  # Default selection
+    )
+
     if prompt := ct.chat_input(placeholder="Can you give me a short summary?"):
         next_msg = '{prompt}'
         st.session_state.messages.append({"role": "user", "content": prompt})
         with open("prompts/prompt.json", "r") as infile:
             data = json.load(infile)
             system_prompt = data["system_prompt"]
-        sys_prompt = system_prompt + """
+        sys_prompt = system_prompt + "Use the level of knowledge specifiec by: " + level + """
             here are is the context: {context}
         """
 
@@ -42,7 +49,7 @@ def start_chat(ct):
         retriever = vector_db.get_retriever()
 
         rag_chain = (
-            {"context": retriever | format_docs, "prompt": RunnablePassthrough()}
+            {"context": retriever | format_docs, "prompt": RunnablePassthrough() }
             | chat_prompt
             | llm
             | StrOutputParser()
@@ -73,5 +80,5 @@ else:
 if not openai_api_key:
     st.sidebar.info("Please add your OpenAI API key to continue.")
 else:
-    llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.2, max_tokens=300)
+    llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.5, max_tokens=300)
     start_chat(st)
