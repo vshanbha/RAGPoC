@@ -7,7 +7,7 @@ A simple Streamlit app that answers questions about an uploaded document via Ope
 ### How to run it on your own machine
 
 ## Prerequisites ##
-- Python version 3.12
+- Python version 3.13
 
 - Java 7 or higher version installed
 
@@ -16,7 +16,7 @@ A simple Streamlit app that answers questions about an uploaded document via Ope
 1. Create Python venv Open a terminal and run:
 
    ```
-   python3.12 -m venv .venv
+   python3.13 -m venv .venv
    source .venv/bin/activate
    ```
 

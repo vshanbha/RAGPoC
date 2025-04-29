@@ -2,24 +2,38 @@ import os
 import faiss
 from langchain.indexes import SQLRecordManager, index
 from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 
 class FAISSManager:
-    def __init__(self, openai_api_key, database_dir="database", index_file="faiss_db"):
-        self.openai_api_key = openai_api_key
+    def __init__(self, llm_backend="openai", backend_config=None, database_dir="database", index_file="faiss_db"):
+        self.llm_backend = llm_backend
+        self.backend_config = backend_config or {}
         self.database_dir = database_dir
         self.index_path = os.path.join(database_dir, index_file)
         self.namespace = f"FAISS/{index_file}"
         self.record_manager = SQLRecordManager(
             self.namespace, db_url=f"sqlite:///{database_dir}/record_manager_cache.sql"
         )
-        self.embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+        self.embeddings = self._initialize_embeddings()
         self.vector_store = None
         
         # Initialize FAISS index
         self._init_faiss()
+
+    def _initialize_embeddings(self):
+        """Initialize the embeddings model based on the configuration."""
+        if self.llm_backend == "ollama":
+            ollama_host = self.backend_config.get("host", "http://localhost:11434")
+            ollama_model = self.backend_config.get("model", "mistral")
+            print("Using Ollama embeddings")
+            return OllamaEmbeddings(base_url=ollama_host, model=ollama_model) #
+        elif self.llm_backend == "openai":
+            openai_api_key = self.backend_config.get("api_key")
+            print("Using OpenAI embeddings")
+            return OpenAIEmbeddings(api_key=openai_api_key)
 
     def _init_faiss(self):
         """Initialize the FAISS index or create a new one if it doesn't exist."""

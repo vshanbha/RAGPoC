@@ -4,6 +4,7 @@ from menu import menu_with_redirect
 from persistence.vector_db import FAISSManager
 
 from langchain_openai import ChatOpenAI
+from langchain_community.llms import Ollama
 from langchain.prompts.chat import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -45,7 +46,6 @@ def start_chat(ct):
         history.chat_message("user").write(prompt)
 
         # https://python.langchain.com/docs/tutorials/rag/#retrieval-and-generation-retrieve
-        vector_db = FAISSManager(openai_api_key=openai_api_key)
         retriever = vector_db.get_retriever()
 
         rag_chain = (
@@ -68,17 +68,36 @@ def start_chat(ct):
 menu_with_redirect()
 
 st.title(":wrench: Document Assistant")
+openai_api_key = None
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-if "API_KEY" in st.secrets:
-    openai_api_key = st.secrets["API_KEY"]
-else:
-    openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+# Check if Ollama configuration is available in secrets
+if "ollama" in st.secrets:
+    ollama_config = st.secrets["ollama"]
+    ollama_host = ollama_config.get("host", "http://localhost:11434")
+    ollama_model = ollama_config.get("model", "mistral")  # Default model
 
-if not openai_api_key:
-    st.sidebar.info("Please add your OpenAI API key to continue.")
+    llm = Ollama(base_url=ollama_host, model=ollama_model)  # Initialize Ollama
+    llm_backend = "ollama"
+    backend_config =  {"host": ollama_host, "model": ollama_model} # Only pass host and model
+    st.sidebar.success("Using Ollama server")
 else:
-    llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.5, max_tokens=300)
+
+    # Ask user for their OpenAI API key via `st.text_input`.
+    # Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
+    # via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
+    if "API_KEY" in st.secrets:
+        openai_api_key = st.secrets["API_KEY"]
+    else:
+        openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+
+    if not openai_api_key:
+        st.sidebar.info("Please add your OpenAI API key to continue.")
+    else:
+        llm = ChatOpenAI( openai_api_key=openai_api_key, temperature=0.5, max_tokens=300)
+        llm_backend = "openai"
+        backend_config = {"api_key": openai_api_key}
+        st.sidebar.success("Using OpenAI")
+
+if llm:
+    vector_db = FAISSManager(llm_backend=llm_backend, backend_config=backend_config)
     start_chat(st)
